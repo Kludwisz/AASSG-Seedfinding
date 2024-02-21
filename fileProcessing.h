@@ -24,9 +24,6 @@ struct seedRange{
     uint64_t endingStructureSeed;
 };
 
-struct fileManagement fileManagement;
-uint64_t startingStructureSeed, endingStructureSeed, currentStructureSeed;
-
 void fileOpener(struct fileManagement *fileManagement);
 void fileCloser(struct fileManagement *fileManagement);
 void readSeedRange(struct fileManagement *fileManagement, uint64_t *startingStructureSeed, uint64_t *endingStructureSeed);

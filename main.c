@@ -23,6 +23,10 @@ int main(int argc, char *argv[])
 
     double startTime = MPI_Wtime(); // Start time of the computation
 
+    // moved from fileProcessing.h
+    struct fileManagement fileManagement;
+    uint64_t startingStructureSeed, endingStructureSeed, currentStructureSeed;
+
     fileOpener(&fileManagement);
     readSeedRange(&fileManagement, &startingStructureSeed, &endingStructureSeed);
 
@@ -58,8 +62,9 @@ int main(int argc, char *argv[])
 
             if (isSSV)
                 fprintf(fileManagement.ssvFastionSeeds, "%" PRId64 "\n", currentStructureSeed);
-            else
+            //else
 
+            /*
             bool isEndCity = findEndCities(); // Need to add in coord returns for coord printing
 
             if (isEndCity)
@@ -72,7 +77,7 @@ int main(int argc, char *argv[])
                     fprintf(fileManagement.ssvFastionEndCitySeeds, "%" PRId64 "\n", currentStructureSeed);
                     fprintf(fileManagement.ssvFastionEndCitySeedsWithCoords, "%" PRId64 "\n", currentStructureSeed);
                 }
-                else
+                //else
                 
                 bool isEndCityShip = checkForShip(); // Need to add in coord returns for coord printing
                 if (isEndCityShip)
@@ -86,7 +91,9 @@ int main(int argc, char *argv[])
                         fprintf(fileManagement.ssvFastionEndCityShipSeedsWithCoords, "%" PRId64 "\n", currentStructureSeed);
                     }
                 }
+                
             }
+            */
         }
     }
 

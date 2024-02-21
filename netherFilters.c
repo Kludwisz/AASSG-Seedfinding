@@ -45,7 +45,7 @@ bool checkStructureDistances(Pos* bast, Pos* fort)
     else return true;
 }
 
-bool checkStructureReqs(const Generator* biomeSource, Pos* bast, Pos* fort)
+bool checkStructureReqs(const Generator* biomeSource, const uint64_t currentStructureSeed, Pos* bast, Pos* fort)
 {
     if (!checkStructureDistances(bast, fort))
         return false;
@@ -79,7 +79,7 @@ bool findFastions(uint64_t currentStructureSeed, Pos* bastions, int bastCount, P
     {
         for (fortID = 0; fortID < fortCount; fortID++)
         {
-            if (checkStructureReqs(biomeSource, &(bastions[bastID]), &(forts[fortID])))
+            if (checkStructureReqs(biomeSource, currentStructureSeed, &(bastions[bastID]), &(forts[fortID])))
                 return true;
         }
     }
