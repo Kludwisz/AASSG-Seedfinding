@@ -1,6 +1,4 @@
 #include "fileProcessing.h"
-#include <stdio.h>
-#include <inttypes.h>
 
 void fileOpener(struct fileManagement *fileManagement)
 {
@@ -56,4 +54,25 @@ void readSeedRange(struct fileManagement *fileManagement, uint64_t *startingStru
     int scanResult = fscanf(fileManagement->seedRange, "%" SCNu64 "%" SCNu64, startingStructureSeed, endingStructureSeed);
     if (scanResult != 2)
         printf("Error reading seeds from file.\n");
+}
+
+void atomicPrintSeed(MPI_File mpi_file, const uint64_t seed) {
+    // int rank, size;
+    // MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    // MPI_Comm_size(MPI_COMM_WORLD, &size);
+    // printf("Process %d calls atomicPrintSeed, file %s\n", rank, filename);
+
+    char data[20]; 
+    sprintf(data, ":%llu:\n", seed);
+
+    // TODO
+    // find out what the fuck is going on here
+
+    // Print to file using shared pointer
+    MPI_File_seek(mpi_file, 0, MPI_SEEK_END);
+    int statusCode = MPI_File_write_shared(mpi_file, data, strlen(data), MPI_CHAR, MPI_STATUS_IGNORE);
+    if (statusCode != MPI_SUCCESS)
+        printf("atomicPrintSeed FILE WRITE FAILED\n"); 
+
+    // printf("Process %d: finished atomicPrintSeed, file closed.\n", rank);
 }

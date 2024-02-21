@@ -13,7 +13,7 @@
 
 int main(int argc, char *argv[])
 {
-    double totalTime; // Variable to store total time
+    // double totalTime; // Variable to store total time
 
     MPI_Init(&argc, &argv); // Initialize MPI
 
@@ -21,7 +21,9 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &rank); // Get current process rank
     MPI_Comm_size(MPI_COMM_WORLD, &size); // Get total number of processes
 
-    double startTime = MPI_Wtime(); // Start time of the computation
+    double startTime = 0.0, endTime = 0.0;
+    if (rank == 0) 
+        startTime = MPI_Wtime(); // Start time of the computation
 
     // moved from fileProcessing.h
     struct fileManagement fileManagement;
@@ -30,12 +32,21 @@ int main(int argc, char *argv[])
     fileOpener(&fileManagement);
     readSeedRange(&fileManagement, &startingStructureSeed, &endingStructureSeed);
 
+    fileCloser(&fileManagement);
+    // the remaining file operations will be handled using
+    // the thread-safe MPI file write functions
+
+    MPI_File mpi_file;
+    MPI_File_open(MPI_COMM_WORLD, "test.txt", MPI_MODE_WRONLY | MPI_MODE_CREATE, MPI_INFO_NULL, &mpi_file);
+    //MPI_Barrier(MPI_COMM_WORLD);
+    printf("File opened.\n"); 
+
     uint64_t totalIterations = endingStructureSeed - startingStructureSeed + 1;
     uint64_t iterationsPerProcess = totalIterations / size;
     uint64_t extraIterations = totalIterations % size;
-
     uint64_t startIteration = rank * iterationsPerProcess + startingStructureSeed;
     uint64_t endIteration = (rank + 1) * iterationsPerProcess - 1 + startingStructureSeed;
+
     if (rank == size - 1) 
     {
         endIteration += extraIterations; // Add extra iterations to the last process
@@ -50,18 +61,20 @@ int main(int argc, char *argv[])
     Generator biomeSource;
     setupGenerator(&biomeSource, MC_1_16_1, 0);
 
+    // printf("Will run %llu -> %llu\n", startIteration, endIteration);
+
     for (currentStructureSeed = startIteration; currentStructureSeed <= endIteration; currentStructureSeed++) 
     {
         bool isFastion = findFastions(currentStructureSeed, bastions, bastCount, forts, fortCount, &biomeSource, bastID, fortID);
 
         if (isFastion)
         {
-            fprintf(fileManagement.fastionSeeds, "%" PRId64 "\n", currentStructureSeed);
+            //atomicPrintSeed("Output/fastionSeeds.txt", currentStructureSeed); // TODO use fileManagement
 
-            bool isSSV = checkForSSV(&forts[fortID], &biomeSource);
+            bool isSSV = checkForSSV(&(forts[fortID]), &biomeSource);
 
             if (isSSV)
-                fprintf(fileManagement.ssvFastionSeeds, "%" PRId64 "\n", currentStructureSeed);
+                atomicPrintSeed(mpi_file, currentStructureSeed); // TODO use fileManagement
             //else
 
             /*
@@ -97,20 +110,22 @@ int main(int argc, char *argv[])
         }
     }
 
+    // printf("%d reached barrier.", rank);
     MPI_Barrier(MPI_COMM_WORLD); // Ensure all processes have completed before closing files
-    
-    double endTime = MPI_Wtime(); // End time of the computation
 
-    // Calculate total time on rank 0
-    MPI_Reduce(&endTime, &totalTime, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+    MPI_File_close(&mpi_file);
+    
+    // Calculate total time on rank 0 
+    // MPI_Reduce(&endTime, &totalTime, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
 
     if (rank == 0) 
-    {        
-        printf("Total execution time (s): %lf\n", totalTime - startTime); // Print total execution time
+    {
+        endTime = MPI_Wtime(); // End time of the computation   
+        printf("Approx. execution time (s): %lf\n", endTime - startTime); // Print rank 0 execution time
         printf("Done\n"); // Print "done" message once
     }
 
-    fileCloser(&fileManagement);
+    //fileCloser(&fileManagement);
     MPI_Barrier(MPI_COMM_WORLD);
 
     MPI_Finalize(); // Finalize MPI

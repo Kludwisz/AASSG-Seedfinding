@@ -2,8 +2,10 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <inttypes.h>
 #include <stdbool.h>
 #include <string.h>
+#include <mpi.h>
 
 struct fileManagement {
     FILE *seedRange;
@@ -27,3 +29,4 @@ struct seedRange{
 void fileOpener(struct fileManagement *fileManagement);
 void fileCloser(struct fileManagement *fileManagement);
 void readSeedRange(struct fileManagement *fileManagement, uint64_t *startingStructureSeed, uint64_t *endingStructureSeed);
+void atomicPrintSeed(MPI_File mpi_file, const uint64_t seed);
